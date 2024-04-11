@@ -1,0 +1,61 @@
+name: headlesscms
+recipe: lamp
+config:
+  via: "cli"
+  php: "8.3"
+
+services:
+
+  php82:
+    type: php:8.2
+    via: "cli"
+
+
+tooling:
+  cleanup:
+    cmd: rm -rf vendor composer.lock
+
+
+  setup82:
+    service: php82
+    cmd: rm -rf vendor composer.lock && composer install
+
+  setup83:
+    service: appserver
+    cmd: rm -rf vendor composer.lock && composer install
+
+
+  test82:
+    service: php82
+    cmd: composer pest
+
+  test83:
+    service: appserver
+    cmd: composer pest
+
+  phpstan:
+    service: appserver
+    cmd: composer phpstan
+
+
+  lara11:
+    service: appserver
+    cmd:
+      - rm -rf vendor composer.lock
+      - composer require laravel/laravel:^11
+      - composer install
+      - composer pest
+      - composer phpstan
+      # this is for removing a specific version
+      - composer remove laravel/laravel
+
+  lara10:
+    service: appserver
+    cmd:
+      - rm -rf vendor composer.lock
+      - composer require laravel/laravel:^10
+      - composer install
+      - composer pest
+      - composer phpstan
+      # this is for removing a specific version
+      - composer remove laravel/laravel
