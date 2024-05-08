@@ -7,12 +7,15 @@ use Filament\Contracts\Plugin;
 use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Phpsa\FilamentHeadlessCms\Models\FhcmsContent;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
 use Phpsa\FilamentHeadlessCms\Contracts\PageTemplate;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource;
 use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\BlogTemplate;
 use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\DefaultTemplate;
+use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\BlogCategoryTemplate;
 
 /**
  * @template R of Resource
@@ -29,6 +32,10 @@ class FilamentHeadlessCms implements Plugin
      * @var class-string<R>
      */
     protected string $resource = PageResource::class;
+
+    protected string $fileUploadFormField = FileUpload::class;
+
+    protected string $editorFormField = RichEditor::class;
 
     /**
      *
@@ -72,7 +79,8 @@ class FilamentHeadlessCms implements Plugin
 
         $instance->setTemplates([
             DefaultTemplate::class,
-            BlogTemplate::class
+            BlogTemplate::class,
+            BlogCategoryTemplate::class,
         ]);
 
         foreach ($options as $value => $option) {
@@ -98,6 +106,7 @@ class FilamentHeadlessCms implements Plugin
 
     public function register(Panel $panel): void
     {
+        $panel->resources([$this->resource]);
     }
 
 
@@ -173,7 +182,7 @@ class FilamentHeadlessCms implements Plugin
     public function getSiteUrl(): string
     {
         /** @phpstan-ignore-next-line */
-        return $this->siteUrl ?? config('app.url');
+        return $this->siteUrl ?? config('app.frontend_url') ?? config('app.url');
     }
 
     public function generateUrl(string $slug): string
@@ -212,5 +221,29 @@ class FilamentHeadlessCms implements Plugin
     public function getTemplateTabs(): bool
     {
         return $this->templateTabs;
+    }
+
+    public function setUploadFormField(string $field): self
+    {
+        $this->fileUploadFormField = $field;
+
+        return $this;
+    }
+
+    public function getUploadFormField(): string
+    {
+        return $this->fileUploadFormField;
+    }
+
+    public function setEditorFormField(string $field): self
+    {
+        $this->editorFormField = $field;
+
+        return $this;
+    }
+
+    public function getEditorFormField(): string
+    {
+        return $this->editorFormField;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Phpsa\FilamentHeadlessCms;
 
+use Phpsa\FilamentHeadlessCms\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -13,6 +14,7 @@ class CmsServiceProvider extends PackageServiceProvider
     {
         $package->name('filament-headless-cms')
             ->hasMigration('create_filament_headless_cms_table')
+            ->hasCommand(InstallCommand::class)
             ->hasTranslations();
     }
 }

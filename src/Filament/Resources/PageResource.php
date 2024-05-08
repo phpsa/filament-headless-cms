@@ -5,22 +5,19 @@ namespace Phpsa\FilamentHeadlessCms\Filament\Resources;
 use Carbon\Carbon;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 use Filament\Resources\Resource;
-use Illuminate\Support\Collection;
-use Filament\Forms\Components\Card;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Split;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Navigation\NavigationItem;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
-use Filament\Navigation\NavigationGroup;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
@@ -30,17 +27,21 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Resources\Pages\PageRegistration;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
-use Phpsa\FilamentHeadlessCms\Contracts\PageTemplate;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\EditFilamentPage;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\ListFilamentPages;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\CreateFilamentPage;
+use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasSchemas;
+use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasTemplate;
 
 class PageResource extends Resource
 {
+    use HasTemplate;
+    use HasSchemas;
 
     protected static ?string $recordRouteKeyName = 'id';
     protected static ?string $recordTitleAttribute = 'title';
+
+    protected static ?string $currentCmsTemplate = null;
 
     public static function getModel(): string
     {
@@ -54,7 +55,7 @@ class PageResource extends Resource
 
     public static function getPluralLabel(): string
     {
-        return __('filament-headless-cms::pages.modelLabelPlural');
+        return static::getCurrentTemplate()['label'] . ' pages';
     }
 
     public static function getNavigationGroup(): ?string
@@ -82,30 +83,59 @@ class PageResource extends Resource
         return filled(FilamentHeadlessCms::getPlugin()->getNavigation('icon_active')) ? (string) FilamentHeadlessCms::getPlugin()->getNavigation('icon_active') : static::getNavigationIcon();
     }
 
+
+    public static function getNavigationItems(): array
+    {
+        $contentTypes = static::getTemplates()->map(fn ($label, $class) =>
+        NavigationItem::make($label)
+            ->group(static::getNavigationGroup())
+            ->parentItem(static::getNavigationParentItem())
+            ->icon($class::getNavigationIcon())
+            ->activeIcon($class::getActiveNavigationIcon())
+            ->isActiveWhen(fn () =>
+                request()->routeIs(static::getRouteBaseName() . '.*') &&
+                request()->query('cms_template', static::getCurrentTemplateSlug()) === $class::getTemplateSlug())
+            ->badge($class::getNavigationBadge(), color: $class::getNavigationBadgeColor())
+            ->badgeTooltip($class::getNavigationBadgeTooltip())
+            ->sort($class::getNavigationSort())
+            ->url(static::getUrl('index', ['cms_template' => $class::getTemplateSlug()])));
+        return $contentTypes->toArray();
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Group::make()
-                    ->schema([
-                        static::getPrimaryColumnSchema(),
-                        ...static::getTemplateSchemas(),
-                    ])
-                    ->columnSpan(['lg' => 7]),
-
-                static::getSecondaryColumnSchema(),
-
+                Split::make([
+                    Group::make(
+                        [
+                            ...static::getPrimaryColumnSchema(),
+                            static::getTemplateSchemas(),
+                        ]
+                    ),
+                    Group::make(
+                        [
+                            Section::make(
+                                [
+                                    ...static::getSecondaryColumnSchema(),
+                                ]
+                            ),
+                            static::getSideColumnSchemas(),
+                            static::getSeoColumnSchema()
+                        ]
+                    )->grow(false),
+                ])
+                ->from('md')
+                ->columnSpanFull(),
             ])
-            ->columns([
-                'sm' => 9,
-                'lg' => null,
-            ]);
+        ;
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+
                 TextColumn::make('title')
                     ->label(__('filament-headless-cms::pages.form.title'))
                     ->searchable()
@@ -113,7 +143,7 @@ class PageResource extends Resource
 
                 TextColumn::make('slug')
                     ->label(__('filament-headless-cms::pages.form.slug'))
-                    ->icon('heroicon-o-external-link')
+            // ->icon('heroicon-o-external-link')
                     ->iconPosition('after')
                     ->getStateUsing(fn (FilamentPage $record) => $record->url)
                     ->searchable()
@@ -133,8 +163,9 @@ class PageResource extends Resource
                     ]),
 
                 TextColumn::make('published_at')
-                    ->label(__('filament-headless-cms::pages.form.published_at.label'))
-                    ->dateTime(__('filament-headless-cms::pages.form.dateFormat')),
+                    ->label(
+                        __('filament-headless-cms::pages.form.published_at')
+                    ),
             ])
             ->filters([
                 Filter::make('published_at')
@@ -179,140 +210,50 @@ class PageResource extends Resource
             ]);
     }
 
-    public static function getPrimaryColumnSchema(): Component
+
+
+    public static function getSecondaryColumnSchema(): array
     {
-        return Section::make()
-            ->columns(2)
-            ->schema([
-                ...static::insertBeforePrimaryColumnSchema(),
-                TextInput::make('title')
-                    ->label(__('filament-headless-cms::pages.form.title'))
-                    ->columnSpan(1)
-                    ->required()
-                    ->lazy()
-                    ->afterStateUpdated(fn (string $context, $state, callable $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null),
 
-                TextInput::make('slug')
-                    ->label(__('filament-headless-cms::pages.form.slug'))
-                    ->columnSpan(1)
-                    ->required()
-                    ->unique(FilamentPage::class, 'slug', ignoreRecord: true),
-                ...static::insertAfterPrimaryColumnSchema(),
-            ]);
-    }
+        return [
 
-    public static function getSecondaryColumnSchema(): Component
-    {
-        return Section::make()
-            ->schema([
-                ...static::insertBeforeSecondaryColumnSchema(),
-                Select::make('template')
-                    ->live()
-                    ->afterStateUpdated(fn (string $context, $state, callable $set) => $set('data.templateName', Str::snake(self::getTemplateName($state))))
-                    ->afterStateHydrated(fn (string $context, $state, callable $set) => $set('data.templateName', Str::snake(self::getTemplateName($state))))
-                    ->options(static::getTemplates()),
+            Group::make([
+                Placeholder::make('created_at')
+                        ->label(__('filament-headless-cms::pages.form.created_at'))
+                        ->hidden(fn (?FilamentPage $record) => $record === null)
+                        ->content(fn (FilamentPage $record): string => $record->created_at->diffForHumans()),
 
-                Hidden::make('data.templateName')
-                    ->reactive(),
+                Placeholder::make('updated_at')
+                        ->label(__('filament-headless-cms::pages.form.updated_at'))
+                        ->hidden(fn (?FilamentPage $record) => $record === null)
+                        ->content(fn (FilamentPage $record): string => $record->updated_at?->diffForHumans() ?? '-'),
+            ])->columns(2),
+            ...static::insertBeforeSecondaryColumnSchema(),
+            Hidden::make('template')
+            ->live()
+            ->default(fn (): string => request()->query('template', static::getCurrentTemplate()['class'])),
 
-                DateTimePicker::make('published_at')
+            Hidden::make('template_slug')
+            ->default(fn (): string =>  static::getCurrentTemplate()['slug']),
+
+            DateTimePicker::make('published_at')
                     ->label(__('filament-headless-cms::pages.form.published_at'))
                     ->displayFormat(__('filament-headless-cms::pages.dateFormat'))
                     ->default(now()),
 
-                DateTimePicker::make('published_until')
+            DateTimePicker::make('published_until')
                     ->label(__('filament-headless-cms::pages.form.published_until'))
                     ->displayFormat(__('filament-headless-cms::pages.dateFormat')),
 
-                Placeholder::make('created_at')
-                    ->label(__('filament-headless-cms::pages.form.created_at'))
-                    ->hidden(fn (?FilamentPage $record) => $record === null)
-                    ->content(fn (FilamentPage $record): string => $record->created_at->diffForHumans()),
-
-                Placeholder::make('updated_at')
-                    ->label(__('filament-headless-cms::pages.form.updated_at'))
-                    ->hidden(fn (?FilamentPage $record) => $record === null)
-                    ->content(fn (FilamentPage $record): string => $record->updated_at?->diffForHumans() ?? '-'),
-                ...static::insertAfterSecondaryColumnSchema(),
-            ])
-            ->columnSpan(['lg' => 2]);
+            ...static::insertAfterSecondaryColumnSchema(),
+        ];
     }
 
-    /**
-     *
-     * @return array<Component>
-     */
-    public static function insertBeforePrimaryColumnSchema(): array
-    {
-        return [];
-    }
 
-    /**
-     *
-     * @return array<Component>
-     */
-    public static function insertAfterPrimaryColumnSchema(): array
-    {
-        return [];
-    }
 
-    /**
-     *
-     * @return array<Component>
-     */
-    public static function insertBeforeSecondaryColumnSchema(): array
-    {
-        return [];
-    }
 
-    /**
-     *
-     * @return array<Component>
-     */
-    public static function insertAfterSecondaryColumnSchema(): array
-    {
-        return [];
-    }
 
-    /**
-     * @return Collection<int, class-string<PageTemplate>>
-     */
-    public static function getTemplateClasses(): Collection
-    {
-        return FilamentHeadlessCms::getPlugin()->getTemplates();
-    }
 
-    /**
-     * @return Collection<class-string<PageTemplate>, string>
-     */
-    public static function getTemplates(): Collection
-    {
-        /** @phpstan-ignore-next-line */
-        return static::getTemplateClasses()
-            ->mapWithKeys(
-                fn ($class): array => [$class => $class::title()]
-            );
-    }
-
-    public static function getTemplateName(string $class): string
-    {
-        return Str::of($class)->afterLast('\\')->snake()->toString();
-    }
-
-    /**
-     *
-     * @return array<int, Group>
-     */
-    public static function getTemplateSchemas(): array
-    {
-         /** @phpstan-ignore-next-line */
-        return static::getTemplateClasses()
-            ->map(fn ($class): Group => Group::make($class::schema())
-                ->afterStateHydrated(fn ($component, $state) => $component->getChildComponentContainer()->fill($state))
-                ->statePath('data.content')
-                ->visible(fn ($get) => $get('data.template') === $class))
-            ->toArray();
-    }
 
     /**
      *
@@ -350,33 +291,51 @@ class PageResource extends Resource
         ];
     }
 
+    public static function getSeoColumnSchema(): Group
+    {
 
-    // public static function getNavigationItems(): array
-    // {
+        if (static::getCurrentTemplate()['seo'] === false) {
+            return Group::make([]);
+        }
+        return
+        Group::make([
+            Section::make('SEO')
+                            ->description('Enter SEO Details for the current content')
+                            ->relationship(
+                                'seo'
+                            )
+                            ->schema(
+                                [
+                                    TextInput::make('title')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+                                    TagsInput::make('keywords')
+                                 ->placeholder('Enter keywords')
+                                    ->columnSpanFull(),
+                                    Textarea::make('description')
+                                    ->maxLength(65535)
+                                    ->columnSpanFull(),
+                                    Select::make('robots')
+                                            ->label('Follow')
+                                            ->native(false)
+                                            ->default('index, follow')
+                                            ->options([
+                                                'index, follow'       => 'Index and follow',
+                                                'no index, follow'    => 'No index and follow',
+                                                'index, no follow'    => 'Index and no follow',
+                                                'no index, no follow' => 'No index and no follow',
+                                            ]),
+                                ]
+                            )
+        ])
+        ;
+    }
 
-    //     return NavigationGroup::make()
-    //     ->label(static::getNavigationLabel())
-    //     ->parentItem(static::getNavigationGroup());
 
-    //     $initial = parent::getNavigationItems();
+    public static function getEloquentQuery(): Builder
+    {
 
-    //     \Filament\Navigation\NavigationItem::class
-
-    //     return $initial;
-
-    //     /**
-    //      *  return [
-    //         \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
-    //             ->group(static::getNavigationGroup())
-    //             ->parentItem(static::getNavigationParentItem())
-    //             ->icon(static::getNavigationIcon())
-    //             ->activeIcon(static::getActiveNavigationIcon())
-    //             ->isActiveWhen(fn () => request()->routeIs(static::getRouteBaseName() . '.*'))
-    //             ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
-    //             ->badgeTooltip(static::getNavigationBadgeTooltip())
-    //             ->sort(static::getNavigationSort())
-    //             ->url(static::getNavigationUrl()),
-    //     ];
-    //      */
-    // }
+        return parent::getEloquentQuery()->when(static::getCurrentTemplateSlug(), fn(Builder $builder) => $builder->where('template_slug', static::getCurrentTemplateSlug()));
+    }
 }

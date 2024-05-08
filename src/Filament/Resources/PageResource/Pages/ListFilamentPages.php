@@ -17,8 +17,13 @@ class ListFilamentPages extends ListRecords
 
     protected function getActions(): array
     {
+        $url = static::getResource()::getUrl('create');
+        $query = parse_url($url, PHP_URL_QUERY);
+        $url .= $query ? '&' : '?';
+        $url .= 'cms_template=' . static::getResource()::getCurrentTemplateSlug();
+
         return [
-            CreateAction::make(),
+            CreateAction::make()->url($url)->label('New ' . static::getResource()::getCurrentTemplate()['label'] . ' Page'),
         ];
     }
 

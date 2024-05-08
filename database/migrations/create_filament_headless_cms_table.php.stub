@@ -8,15 +8,28 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('fhcms_content', function (Blueprint $table) {
+        Schema::create('fhcms_contents', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->string('template');
+            $table->string('template_slug');
             $table->longText('data')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->timestamp('published_until')->nullable();
             $table->softDeletes();
+            $table->timestamps();
+
+            $table->unique(['slug', 'template_slug', 'deleted_at']);
+        });
+
+        Schema::create('fhcms_seos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('fhcms_contents_id');
+            $table->string('title');
+            $table->string('robots');
+            $table->json('keywords')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

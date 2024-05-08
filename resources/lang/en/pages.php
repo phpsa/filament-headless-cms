@@ -12,11 +12,9 @@ return [
         'created_at'      => 'Created At',
         'updated_at'      => 'Updated At',
     ],
-],
-'status'           => [
-    'draft'     => 'Draft',
-    'published' => 'Published',
-],
-'dateFormat'       => 'd. M Y H:i',
-
+    'status'           => [
+        'draft'     => 'Draft',
+        'published' => 'Published',
+    ],
+    'dateFormat'       => 'd. M Y H:i',
 ];
