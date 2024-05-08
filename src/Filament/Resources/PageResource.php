@@ -215,18 +215,33 @@ class PageResource extends Resource
     public static function getSecondaryColumnSchema(): array
     {
 
+        $dateFields = static::getCurrentTemplate()['publish_dates'] ? [
+            DateTimePicker::make('published_at')
+            ->label(__('filament-headless-cms::pages.form.published_at'))
+            ->displayFormat(__('filament-headless-cms::pages.dateFormat'))
+            ->default(now()),
+
+            DateTimePicker::make('published_until')
+
+            ->label(__('filament-headless-cms::pages.form.published_until'))
+            ->displayFormat(__('filament-headless-cms::pages.dateFormat')),
+
+        ] : [
+            Hidden::make('published_at')
+            ->label(__('filament-headless-cms::pages.form.published_at'))
+            ->default(now()),
+        ];
+
         return [
 
             Group::make([
                 Placeholder::make('created_at')
                         ->label(__('filament-headless-cms::pages.form.created_at'))
-                        ->hidden(fn (?FilamentPage $record) => $record === null)
-                        ->content(fn (FilamentPage $record): string => $record->created_at->diffForHumans()),
+                        ->content(fn (?FilamentPage $record): string => $record?->created_at->diffForHumans() ?? '-'),
 
                 Placeholder::make('updated_at')
                         ->label(__('filament-headless-cms::pages.form.updated_at'))
-                        ->hidden(fn (?FilamentPage $record) => $record === null)
-                        ->content(fn (FilamentPage $record): string => $record->updated_at?->diffForHumans() ?? '-'),
+                        ->content(fn (?FilamentPage $record): string => $record?->updated_at?->diffForHumans() ?? '-'),
             ])->columns(2),
             ...static::insertBeforeSecondaryColumnSchema(),
             Hidden::make('template')
@@ -236,14 +251,7 @@ class PageResource extends Resource
             Hidden::make('template_slug')
             ->default(fn (): string =>  static::getCurrentTemplate()['slug']),
 
-            DateTimePicker::make('published_at')
-                    ->label(__('filament-headless-cms::pages.form.published_at'))
-                    ->displayFormat(__('filament-headless-cms::pages.dateFormat'))
-                    ->default(now()),
-
-            DateTimePicker::make('published_until')
-                    ->label(__('filament-headless-cms::pages.form.published_until'))
-                    ->displayFormat(__('filament-headless-cms::pages.dateFormat')),
+            ...$dateFields,
 
             ...static::insertAfterSecondaryColumnSchema(),
         ];

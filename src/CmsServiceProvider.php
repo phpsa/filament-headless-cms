@@ -15,6 +15,7 @@ class CmsServiceProvider extends PackageServiceProvider
         $package->name('filament-headless-cms')
             ->hasMigration('create_filament_headless_cms_table')
             ->hasCommand(InstallCommand::class)
+            ->hasRoute('api')
             ->hasTranslations();
     }
 }

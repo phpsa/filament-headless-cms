@@ -26,7 +26,7 @@ trait HasTemplate
             ->flip()
             ->mapWithKeys(
                 fn($class, $label) => [
-                    $class::getTemplateSlug() => ['class' => $class, 'label' => $label, 'slug' => $class::getTemplateSlug(), 'seo' => $class::hasSeo()]
+                    $class::getTemplateSlug() => ['class' => $class, 'label' => $label, 'slug' => $class::getTemplateSlug(), 'seo' => $class::hasSeo(), 'publish_dates' => $class::hasPublishDates()]
                 ]
             );
         return $templates->get($slug, fn() => $templates->first());

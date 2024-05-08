@@ -20,4 +20,11 @@ interface FilamentPage
 {
 
     public function getUrlAttribute(): string;
+
+    /**
+     * Get the instance as an array.
+     *
+     * @return array<TKey, TValue>
+     */
+    public function toArray();
 }

@@ -4,6 +4,7 @@ namespace Phpsa\FilamentHeadlessCms\Models;
 
 use Spatie\Tags\HasTags;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
@@ -41,5 +42,26 @@ class FhcmsContent extends Model implements FilamentPage
     public function Seo(): HasOne
     {
         return $this->hasOne(FhcmsSeo::class, 'fhcms_contents_id', 'id');
+    }
+
+    public function scopeWherePublished(Builder $query)
+    {
+        return $query->where('published_at', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('published_until')
+                    ->orWhere('published_until', '>=', now());
+            });
+    }
+
+    public function scopeWithFilter(Builder $query, array $filters)
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('title', 'like', '%' . $search . '%');
+            });
+        })
+        ->when($filters['tags'] ?? null, function ($query, $tags) {
+                $query->withAnyTags($tags);
+        });
     }
 }

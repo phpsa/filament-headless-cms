@@ -37,6 +37,9 @@ class FilamentHeadlessCms implements Plugin
 
     protected string $editorFormField = RichEditor::class;
 
+    protected array $apiMiddleware = ['api'];
+    protected string $apiPrefix = 'api';
+
     /**
      *
      * @var class-string<M>
@@ -81,7 +84,7 @@ class FilamentHeadlessCms implements Plugin
             DefaultTemplate::class,
             BlogTemplate::class,
             BlogCategoryTemplate::class,
-        ]);
+        ], true);
 
         foreach ($options as $value => $option) {
             $call = 'set'.ucfirst($value);
@@ -195,9 +198,9 @@ class FilamentHeadlessCms implements Plugin
      *
      * @param array<class-string<T>> $templates
      */
-    public function setTemplates(array $templates): self
+    public function setTemplates(array $templates, bool $flush = false): self
     {
-        $this->templates = collect($templates);
+        $this->templates = $flush ? collect($templates) : $this->templates->merge($templates);
 
         return $this;
     }
@@ -245,5 +248,29 @@ class FilamentHeadlessCms implements Plugin
     public function getEditorFormField(): string
     {
         return $this->editorFormField;
+    }
+
+    public function setApiMiddleware(array $middleware): self
+    {
+        $this->apiMiddleware = $middleware;
+
+        return $this;
+    }
+
+    public function setApiPrefix(string $prefix): self
+    {
+        $this->apiPrefix = $prefix;
+
+        return $this;
+    }
+
+    public function getApiMiddleware(): array
+    {
+        return $this->apiMiddleware;
+    }
+
+    public function getApiPrefix(): string
+    {
+        return $this->apiPrefix;
     }
 }

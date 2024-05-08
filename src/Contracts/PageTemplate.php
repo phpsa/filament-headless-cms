@@ -14,6 +14,8 @@ abstract class PageTemplate
 
     protected static bool $hasSeo = true;
 
+    protected static bool $publishDates = true;
+
     abstract public static function title(): string;
 
     /**
@@ -91,5 +93,41 @@ abstract class PageTemplate
     public static function hasSeo(): bool
     {
         return static::$hasSeo;
+    }
+
+    public static function hasPublishDates(): bool
+    {
+        return static::$publishDates;
+    }
+
+    public static function apiTransform(FilamentPage $record): array
+    {
+       // return $data->toArray();
+        $content = $record->data['content'];
+        $data = $record->toArray();
+        $data['content'] = static::toApiResponse($content);
+
+        unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
+        ksort($data);
+        return $data;
+    }
+
+    public static function toApiResponse(array $data): array
+    {
+        return $data;
+    }
+
+    protected static function loadRelatedData($id): array
+    {
+        $record = FilamentHeadlessCms::getPlugin()
+            ->getModel()::wherePublished()
+            ->find($id);
+
+        if (blank($record)) {
+            return null;
+        }
+
+        $template = $record->template;
+        return $template::apiTransform($record);
     }
 }
