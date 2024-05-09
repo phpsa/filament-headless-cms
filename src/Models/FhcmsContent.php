@@ -13,6 +13,8 @@ class FhcmsContent extends Model implements FilamentPage
 {
     use HasTags;
 
+    protected $table = 'fhcms_contents';
+
     protected $fillable = [
         'title',
         'slug',

@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class FhcmsSeo extends Model
 {
 
+    protected $table = 'fhcms_seos';
+
     protected $fillable = [
         'fhcms_contents_id',
         'title',
         'keywords',
         'description',
-        'image_id',
         'robots'
         //'image', // should use media library
         //'image_alt', // should use media library

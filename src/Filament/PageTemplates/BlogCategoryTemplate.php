@@ -23,7 +23,7 @@ class BlogCategoryTemplate extends PageTemplate
     public static function sidebarSchema(): array
     {
         return [
-            FileUpload::make('featured_image')->directory('blog'),
+            FileUpload::make('featured_image'),
         ];
     }
 

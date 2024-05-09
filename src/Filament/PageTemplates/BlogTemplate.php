@@ -78,7 +78,11 @@ class BlogTemplate extends PageTemplate
     public static function sidebarSchema(): array
     {
         return [
-            FieldsFileUpload::make('featured_image')->directory('blog')->image(),
+            Section::make('Featured Image')->columnSpan(1)
+                ->schema([
+                    FieldsFileUpload::make('featured_image'),
+                ]),
+           // FieldsFileUpload::make('featured_image')->directory('blog'),
         ];
     }
 
