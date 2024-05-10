@@ -1,11 +1,11 @@
 <?php
 
-use Doctrine\DBAL\Types\Type;
 use Illuminate\Support\Facades\Route;
 use Phpsa\FilamentHeadlessCms\Http\Controller\Api\PagesController;
 use Phpsa\FilamentHeadlessCms\Http\Controller\Api\TypesController;
 
-$plugin = \Phpsa\FilamentHeadlessCms\FilamentHeadlessCms::getPlugin();
+try {
+    $plugin = \Phpsa\FilamentHeadlessCms\FilamentHeadlessCms::getPlugin();
 
 Route::middleware(
     $plugin->getApiMiddleware()
@@ -18,3 +18,6 @@ Route::middleware(
 
     Route::get('fhcms/content-pages/{type}/{slug}', [PagesController::class, 'show'])->name('content-pages.show');
 });
+}catch(Throwable $throwable){
+    //ignore the errors untill it is enabled.
+}
