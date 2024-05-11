@@ -19,21 +19,31 @@ trait HasTemplate
      * @return array{class:class-string<PageTemplate>, label:string}
      * @throws BindingResolutionException
      */
-    public static function getCurrentTemplate(): array
+    public static function getCurrentTemplate(?string $key = null): mixed
     {
         $slug = self::getCurrentTemplateSlug();
+
         $templates = static::getTemplates()
             ->flip()
             ->mapWithKeys(
                 fn($class, $label) => [
-                    $class::getTemplateSlug() => ['class' => $class, 'label' => $label, 'slug' => $class::getTemplateSlug(), 'seo' => $class::hasSeo(), 'publish_dates' => $class::hasPublishDates()]
+                    $class::getTemplateSlug() => [
+                        'class'         => $class,
+                        'label'         => $label,
+                        'slug'          => $class::getTemplateSlug(),
+                        'seo'           => $class::hasSeo(),
+                        'publish_dates' => $class::hasPublishDates(),
+                        'paginate'      => $class::$paginate,
+                    ]
                 ]
             );
-        return $templates->get($slug, fn() => $templates->first());
+
+        return $key ? $templates->get($slug, fn() => $templates->first())[$key] : $templates->get($slug, fn() => $templates->first());
     }
 
     public static function getCurrentTemplateSlug(): ?string
     {
+
         $slug = request()->query('cms_template');
         if (request()->routeIs('livewire.update')) {
             try {

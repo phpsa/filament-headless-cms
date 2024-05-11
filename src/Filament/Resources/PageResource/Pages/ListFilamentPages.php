@@ -15,12 +15,9 @@ class ListFilamentPages extends ListRecords
         return FilamentHeadlessCms::getPlugin()->getResource();
     }
 
-    protected function getActions(): array
+    protected function getHeaderActions(): array
     {
-        $url = static::getResource()::getUrl('create');
-        $query = parse_url($url, PHP_URL_QUERY);
-        $url .= $query ? '&' : '?';
-        $url .= 'cms_template=' . static::getResource()::getCurrentTemplateSlug();
+        $url = static::getResource()::getUrl('create', ['cms_template' => static::getResource()::getCurrentTemplateSlug()]);
 
         return [
             CreateAction::make()->url($url)->label('New ' . static::getResource()::getCurrentTemplate()['label'] . ' Page'),

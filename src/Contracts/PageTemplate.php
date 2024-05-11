@@ -2,6 +2,7 @@
 
 namespace Phpsa\FilamentHeadlessCms\Contracts;
 
+use Closure;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
@@ -9,6 +10,8 @@ use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 
 abstract class PageTemplate
 {
+
+    public static bool|array|Closure $paginate = true;
 
     protected static int $sortOrder = 0;
 

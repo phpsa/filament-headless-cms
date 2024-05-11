@@ -16,6 +16,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Navigation\NavigationItem;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
@@ -27,11 +28,12 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Resources\Pages\PageRegistration;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
+use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasSchemas;
+use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasTemplate;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\EditFilamentPage;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\ListFilamentPages;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\CreateFilamentPage;
-use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasSchemas;
-use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Traits\HasTemplate;
+use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource\Pages\ManageFilamentPages;
 
 class PageResource extends Resource
 {
@@ -207,7 +209,8 @@ class PageResource extends Resource
             ])
             ->bulkActions([
                 DeleteBulkAction::make(),
-            ]);
+            ])
+            ->paginated(static::getCurrentTemplate('paginate'));
     }
 
 
@@ -298,6 +301,7 @@ class PageResource extends Resource
             'edit'   => EditFilamentPage::route('/{record:id}/edit'),
         ];
     }
+
 
     public static function getSeoColumnSchema(): Group
     {
