@@ -5,7 +5,9 @@ namespace Phpsa\FilamentHeadlessCms\Filament\Resources;
 use Carbon\Carbon;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Split;
@@ -44,6 +46,9 @@ class PageResource extends Resource
     protected static ?string $recordTitleAttribute = 'title';
 
     protected static ?string $currentCmsTemplate = null;
+
+
+
 
     public static function getModel(): string
     {
@@ -100,7 +105,7 @@ class PageResource extends Resource
             ->badge($class::getNavigationBadge(), color: $class::getNavigationBadgeColor())
             ->badgeTooltip($class::getNavigationBadgeTooltip())
             ->sort($class::getNavigationSort())
-            ->url(static::getUrl('index', ['cms_template' => $class::getTemplateSlug()])));
+            ->url(static::getUrl('index', ['template' => $class::getTemplateSlug()])));
         return $contentTypes->toArray();
     }
 
@@ -135,7 +140,7 @@ class PageResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        $table = $table
             ->columns([
 
                 TextColumn::make('title')
@@ -210,7 +215,16 @@ class PageResource extends Resource
             ->bulkActions([
                 DeleteBulkAction::make(),
             ])
+            ->reorderable('sort_order', static::getCurrentTemplate('sortable'))
+            ->reorderRecordsTriggerAction(
+                fn (Action $action, bool $isReordering) => $action
+                    ->button()->extraAttributes(['wire:currentcms' => 'template'])
+            )
             ->paginated(static::getCurrentTemplate('paginate'));
+        if (static::getCurrentTemplate('sortable')) {
+            $table = $table->defaultSort('sort_order', 'asc');
+        }
+        return $table;
     }
 
 
@@ -220,39 +234,39 @@ class PageResource extends Resource
 
         $dateFields = static::getCurrentTemplate()['publish_dates'] ? [
             DateTimePicker::make('published_at')
-            ->label(__('filament-headless-cms::pages.form.published_at'))
-            ->displayFormat(__('filament-headless-cms::pages.dateFormat'))
-            ->default(now()),
+        ->label(__('filament-headless-cms::pages.form.published_at'))
+        ->displayFormat(__('filament-headless-cms::pages.dateFormat'))
+        ->default(now()),
 
             DateTimePicker::make('published_until')
 
-            ->label(__('filament-headless-cms::pages.form.published_until'))
-            ->displayFormat(__('filament-headless-cms::pages.dateFormat')),
+        ->label(__('filament-headless-cms::pages.form.published_until'))
+        ->displayFormat(__('filament-headless-cms::pages.dateFormat')),
 
         ] : [
             Hidden::make('published_at')
-            ->label(__('filament-headless-cms::pages.form.published_at'))
-            ->default(now()),
+        ->label(__('filament-headless-cms::pages.form.published_at'))
+        ->default(now()),
         ];
 
         return [
 
             Group::make([
                 Placeholder::make('created_at')
-                        ->label(__('filament-headless-cms::pages.form.created_at'))
-                        ->content(fn (?FilamentPage $record): string => $record?->created_at->diffForHumans() ?? '-'),
+                    ->label(__('filament-headless-cms::pages.form.created_at'))
+                    ->content(fn (?FilamentPage $record): string => $record?->created_at->diffForHumans() ?? '-'),
 
                 Placeholder::make('updated_at')
-                        ->label(__('filament-headless-cms::pages.form.updated_at'))
-                        ->content(fn (?FilamentPage $record): string => $record?->updated_at?->diffForHumans() ?? '-'),
+                    ->label(__('filament-headless-cms::pages.form.updated_at'))
+                    ->content(fn (?FilamentPage $record): string => $record?->updated_at?->diffForHumans() ?? '-'),
             ])->columns(2),
             ...static::insertBeforeSecondaryColumnSchema(),
             Hidden::make('template')
-            ->live()
-            ->default(fn (): string => request()->query('template', static::getCurrentTemplate()['class'])),
+        ->live()
+        ->default(fn (): string => request()->query('template', static::getCurrentTemplate()['class'])),
 
             Hidden::make('template_slug')
-            ->default(fn (): string =>  static::getCurrentTemplate()['slug']),
+        ->default(fn (): string =>  static::getCurrentTemplate()['slug']),
 
             ...$dateFields,
 
@@ -296,9 +310,9 @@ class PageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListFilamentPages::route('/'),
-            'create' => CreateFilamentPage::route('/create'),
-            'edit'   => EditFilamentPage::route('/{record:id}/edit'),
+            'index'  => ListFilamentPages::route('/{template}'),
+            'create' => CreateFilamentPage::route('/{template}/create'),
+            'edit'   => EditFilamentPage::route('/{template}/{record:id}/edit'),
         ];
     }
 
@@ -312,34 +326,34 @@ class PageResource extends Resource
         return
         Group::make([
             Section::make('SEO')
-                            ->description('Enter SEO Details for the current content')
-                            ->relationship(
-                                'seo'
-                            )
-                            ->schema(
-                                [
-                                    TextInput::make('title')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->columnSpanFull(),
-                                    TagsInput::make('keywords')
-                                 ->placeholder('Enter keywords')
-                                    ->columnSpanFull(),
-                                    Textarea::make('description')
-                                    ->maxLength(65535)
-                                    ->columnSpanFull(),
-                                    Select::make('robots')
-                                            ->label('Follow')
-                                            ->native(false)
-                                            ->default('index, follow')
-                                            ->options([
-                                                'index, follow'       => 'Index and follow',
-                                                'no index, follow'    => 'No index and follow',
-                                                'index, no follow'    => 'Index and no follow',
-                                                'no index, no follow' => 'No index and no follow',
-                                            ]),
-                                ]
-                            )
+                        ->description('Enter SEO Details for the current content')
+                        ->relationship(
+                            'seo'
+                        )
+                        ->schema(
+                            [
+                                TextInput::make('title')
+                                ->required()
+                                ->maxLength(255)
+                                ->columnSpanFull(),
+                                TagsInput::make('keywords')
+                             ->placeholder('Enter keywords')
+                                ->columnSpanFull(),
+                                Textarea::make('description')
+                                ->maxLength(65535)
+                                ->columnSpanFull(),
+                                Select::make('robots')
+                                        ->label('Follow')
+                                        ->native(false)
+                                        ->default('index, follow')
+                                        ->options([
+                                            'index, follow'       => 'Index and follow',
+                                            'no index, follow'    => 'No index and follow',
+                                            'index, no follow'    => 'Index and no follow',
+                                            'no index, no follow' => 'No index and no follow',
+                                        ]),
+                            ]
+                        )
         ])
         ;
     }
@@ -349,5 +363,20 @@ class PageResource extends Resource
     {
 
         return parent::getEloquentQuery()->when(static::getCurrentTemplateSlug(), fn(Builder $builder) => $builder->where('template_slug', static::getCurrentTemplateSlug()));
+    }
+
+
+    public static function getUrl(string $name = 'index', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?Model $tenant = null): string
+    {
+
+        if (blank($panel) || Filament::getPanel($panel)->hasTenancy()) {
+            $parameters['tenant'] ??= ($tenant ?? Filament::getTenant());
+        }
+
+        $routeBaseName = static::getRouteBaseName(panel: $panel);
+
+        $parameters['template'] = isset($parameters['template']) && filled($parameters['template']) ? $parameters['template'] : static::getCurrentTemplateSlug();
+
+        return route("{$routeBaseName}.{$name}", $parameters, $isAbsolute);
     }
 }

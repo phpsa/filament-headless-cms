@@ -17,7 +17,7 @@ class ListFilamentPages extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        $url = static::getResource()::getUrl('create', ['cms_template' => static::getResource()::getCurrentTemplateSlug()]);
+        $url = static::getResource()::getUrl('create');
 
         return [
             CreateAction::make()->url($url)->label('New ' . static::getResource()::getCurrentTemplate()['label'] . ' Page'),

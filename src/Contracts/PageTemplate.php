@@ -13,6 +13,8 @@ abstract class PageTemplate
 
     public static bool|array|Closure $paginate = true;
 
+    public static bool $sortable = false;
+
     protected static int $sortOrder = 0;
 
     protected static bool $hasSeo = true;

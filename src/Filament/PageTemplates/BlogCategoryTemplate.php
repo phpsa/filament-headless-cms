@@ -10,6 +10,8 @@ class BlogCategoryTemplate extends PageTemplate
 {
     protected static bool $hasSeo = false;
 
+    public static bool $sortable = true;
+
     public static function title(): string
     {
         return 'Blog Category';

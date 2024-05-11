@@ -9,6 +9,9 @@ use Filament\Forms\Components\Group;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 use Phpsa\FilamentHeadlessCms\Contracts\PageTemplate;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Sleep;
 use Throwable;
 
 trait HasTemplate
@@ -34,6 +37,7 @@ trait HasTemplate
                         'seo'           => $class::hasSeo(),
                         'publish_dates' => $class::hasPublishDates(),
                         'paginate'      => $class::$paginate,
+                        'sortable'      => $class::$sortable,
                     ]
                 ]
             );
@@ -43,19 +47,12 @@ trait HasTemplate
 
     public static function getCurrentTemplateSlug(): ?string
     {
-
-        $slug = request()->query('cms_template');
         if (request()->routeIs('livewire.update')) {
-            try {
-                $slug = json_decode(request()->collect('components')->first()['snapshot'])->data->data[0]->template_slug;
-            } catch (Throwable) {
-                //hmmm
-            }
+            $old = json_decode(request()->collect('components')->first()['snapshot'])->memo;
+            $route = app('router')->getRoutes()->match(app('request')->create($old->path, $old->method));
+            return $route->parameter('template');
         }
-
-        return (request()->routeIs(static::getRouteBaseName() . '.edit'))
-        ? parent::getEloquentQuery()->find(request()->record, ['template_slug'])->template_slug
-        : $slug;
+        return request()->route('template');
     }
 
     /**
