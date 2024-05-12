@@ -191,7 +191,7 @@ class FilamentHeadlessCms implements Plugin
     public function generateUrl(string $slug): string
     {
 
-        return url($this->siteUrl . '/' . $slug);
+        return url($this->getSiteUrl() . '/' . $slug);
     }
 
     /**

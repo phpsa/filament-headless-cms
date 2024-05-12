@@ -9,7 +9,29 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
 
-class FhcmsContent extends Model implements FilamentPage
+if (trait_exists(\Laravel\Scout\Searchable::class)) {
+    abstract class BasePageModel extends Model
+    {
+        use \Laravel\Scout\Searchable;
+
+        public function searchableAs(): string
+        {
+            return 'fhcms_index' . $this->template_slug;
+        }
+
+        public function toSearchableArray(): array
+        {
+            return $this->template::toSearchableArray($this);
+        }
+    }
+} else {
+    abstract class BasePageModel extends Model
+    {
+    }
+}
+
+
+class FhcmsContent extends BasePageModel implements FilamentPage
 {
     use HasTags;
 
@@ -38,7 +60,7 @@ class FhcmsContent extends Model implements FilamentPage
 
     public function getUrlAttribute(): string
     {
-        return FilamentHeadlessCms::getPlugin()->generateUrl($this->slug);
+        return FilamentHeadlessCms::getPlugin()->generateUrl($this->template_slug . '/' . $this->slug);
     }
 
     public function Seo(): HasOne

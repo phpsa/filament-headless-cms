@@ -94,6 +94,12 @@ we have you covered.
 here are a few items that can be overwritten
 
 ```php
+
+//change default pagination
+public static bool|array|Closure $paginate = true;
+//should the items be sortable?
+public static bool $sortable = false;
+
 protected static int $sortOrder = 0; // set the order in nav
 protected static bool $hasSeo = true; //no SEO, switch to false, why though?
 protected static bool $publishDates = true; // if you do not need to publish on a date and it should just be... :-)
@@ -110,7 +116,7 @@ public static function afterPrimaryColumnSchema(): array;
 // add area before and after the fields in the main sidebar
 public static function beforeSecondaryColumnSchema(): array;
 public static function afterSecondaryColumnSchema(): array;
- 
+
 // need to manipulate the data for your api response?
 public static function toApiResponse(array $data): array
 {
@@ -119,6 +125,12 @@ public static function toApiResponse(array $data): array
     }
 
     return $data;
+}
+
+//Update this if using laravel scout to setup your searchable information
+public function toSearchableArray(FilamentPage $record): array
+{
+    return $this->apiTransform($record);
 }
 ```
 
@@ -144,7 +156,7 @@ FilamentHeadlessCms::make()
 ```
 
 ### Api Routes
-* `api/fhcms/types` - will list the active template types 
+* `api/fhcms/types` - will list the active template types
 * `api/fhcms/types?with_counts` - will list the active template types and count of published items.
 * `fhcms/content-pages/{type}` - type - is the slug, will return paginated list
 * `fhcms/content-pages/{type}/{slug}` - slug is the content item slug. - returns item in json format.

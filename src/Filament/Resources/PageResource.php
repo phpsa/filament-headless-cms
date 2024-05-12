@@ -48,8 +48,6 @@ class PageResource extends Resource
     protected static ?string $currentCmsTemplate = null;
 
 
-
-
     public static function getModel(): string
     {
         return FilamentHeadlessCms::getPlugin()->getModel();
@@ -141,7 +139,8 @@ class PageResource extends Resource
     public static function table(Table $table): Table
     {
         $table = $table
-            ->columns([
+            ->columns(
+                collect([
 
                 TextColumn::make('title')
                     ->label(__('filament-headless-cms::pages.form.title'))
@@ -158,22 +157,24 @@ class PageResource extends Resource
                         url: fn (FilamentPage $record) => $record->url,
                         shouldOpenInNewTab: true
                     )
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
+                    ->sortable(),
 
-                TextColumn::make('status')
+                    static::getCurrentTemplate('sortable') ? TextColumn::make('sort_order') : null,
+
+                    static::getCurrentTemplate('publish_dates') ? TextColumn::make('status')
                 ->badge()
                     ->getStateUsing(fn (FilamentPage $record): string => $record->published_at?->isPast() && ($record->published_until?->isFuture() ?? true) ? __('filament-headless-cms::pages.status.published') : __('filament-headless-cms::pages.status.draft'))
                     ->colors([
                         'success' => __('filament-headless-cms::pages.status.published'),
                         'warning' => __('filament-headless-cms::pages.status.draft'),
-                    ]),
+                    ]) : null,
 
-                TextColumn::make('published_at')
+                    static::getCurrentTemplate('publish_dates') ? TextColumn::make('published_at')
                     ->label(
                         __('filament-headless-cms::pages.form.published_at')
-                    ),
-            ])
+                    ) : null,
+                ])->filter()->toArray()
+            )
             ->filters([
                 Filter::make('published_at')
                     ->form([
@@ -320,7 +321,7 @@ class PageResource extends Resource
     public static function getSeoColumnSchema(): Group
     {
 
-        if (static::getCurrentTemplate()['seo'] === false) {
+        if (static::getCurrentTemplate('seo') === false) {
             return Group::make([]);
         }
         return

@@ -117,6 +117,11 @@ abstract class PageTemplate
         return $data;
     }
 
+    public function toSearchableArray(FilamentPage $record): array
+    {
+        return $this->apiTransform($record);
+    }
+
     public static function toApiResponse(array $data): array
     {
         return $data;
