@@ -162,11 +162,14 @@ FilamentHeadlessCms::make()
 * `fhcms/content-pages/{type}/{slug}` - slug is the content item slug. - returns item in json format.
 
 
+### Performance
+We will continuously look at ways of improving performance, From V1.1.0 - we will be caching the output of the content page for 24 hours at a time or until the record is updated.
+
 ## Planned Features / Suggestions
 * this is a new project and has room for growth and improvement, feel free to suggest enhancements or open pull requests.
 
 ***Currently Planned***
-* Search intergration with Scout
+* ~~Search intergration with Scout~~
 * Improved internal references between templates.
 * Improved testing
 

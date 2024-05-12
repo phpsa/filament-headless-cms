@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Cache;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 
 abstract class PageTemplate
@@ -14,6 +15,8 @@ abstract class PageTemplate
     public static bool|array|Closure $paginate = true;
 
     public static bool $sortable = false;
+
+    public static bool $simplePage = false;
 
     protected static int $sortOrder = 0;
 
@@ -107,14 +110,21 @@ abstract class PageTemplate
 
     public static function apiTransform(FilamentPage $record): array
     {
-       // return $data->toArray();
-        $content = $record->data['content'];
-        $data = $record->toArray();
-        $data['content'] = static::toApiResponse($content);
 
-        unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
-        ksort($data);
-        return $data;
+        /** @var array */
+        $page = Cache::remember('phpsa-filament-headless-cms-page-' . $record->id, now()->addDay(), function () use ($record): array {
+            $content = $record->data['content'];
+            $data = $record->toArray();
+            $data['content'] = static::toApiResponse($content);
+
+            unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
+            ksort($data);
+            return $data;
+        });
+
+        throw_unless(is_array($page) && filled($page));
+
+        return $page;
     }
 
     public function toSearchableArray(FilamentPage $record): array
