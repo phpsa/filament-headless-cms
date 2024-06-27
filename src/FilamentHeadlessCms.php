@@ -2,6 +2,7 @@
 
 namespace Phpsa\FilamentHeadlessCms;
 
+use Closure;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Filament\Resources\Resource;
@@ -9,13 +10,16 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
+use Filament\Support\Concerns\EvaluatesClosures;
+use Phpsa\FilamentHeadlessCms\Concerns\HasPageBlockBuilder;
 use Phpsa\FilamentHeadlessCms\Models\FhcmsContent;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
 use Phpsa\FilamentHeadlessCms\Contracts\PageTemplate;
 use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource;
 use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\BlogTemplate;
-use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\DefaultTemplate;
+use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\SimplePageTemplate;
 use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\BlogCategoryTemplate;
+use Phpsa\FilamentHeadlessCms\Renderers\SimplePageRenderer;
 
 /**
  * @template R of Resource
@@ -26,6 +30,8 @@ use Phpsa\FilamentHeadlessCms\Filament\PageTemplates\BlogCategoryTemplate;
  */
 class FilamentHeadlessCms implements Plugin
 {
+    use EvaluatesClosures;
+    use HasPageBlockBuilder;
 
     /**
      *
@@ -38,7 +44,13 @@ class FilamentHeadlessCms implements Plugin
     protected string $editorFormField = RichEditor::class;
 
     protected array $apiMiddleware = ['api'];
+
     protected string $apiPrefix = 'api';
+
+    protected string $renderer = SimplePageRenderer::class;
+
+    /** PageBlockBuilder */
+
 
     /**
      *
@@ -71,6 +83,16 @@ class FilamentHeadlessCms implements Plugin
 
     public function boot(Panel $panel): void
     {
+        $booted = [];
+
+        foreach (class_uses_recursive($this) as $trait) {
+            $method = 'boot'.class_basename($trait);
+
+            if (method_exists($this, $method) && ! in_array($method, $booted)) {
+                $this->{$method}($panel);
+                $booted[] = $method;
+            }
+        }
     }
 
     /**
@@ -81,7 +103,7 @@ class FilamentHeadlessCms implements Plugin
         $instance = new self();
 
         $instance->setTemplates([
-            DefaultTemplate::class,
+            SimplePageTemplate::class,
             BlogTemplate::class,
             BlogCategoryTemplate::class,
         ], true);
@@ -111,7 +133,6 @@ class FilamentHeadlessCms implements Plugin
     {
         $panel->resources([$this->resource]);
     }
-
 
     /**
      *

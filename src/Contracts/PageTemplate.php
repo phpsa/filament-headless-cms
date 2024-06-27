@@ -26,6 +26,8 @@ abstract class PageTemplate
 
     abstract public static function title(): string;
 
+    abstract public static function mutateData(array $data): array;
+
     /**
      * @return array<int|string, Component>
      */
@@ -115,7 +117,7 @@ abstract class PageTemplate
         $page = Cache::remember('phpsa-filament-headless-cms-page-' . $record->id, now()->addDay(), function () use ($record): array {
             $content = $record->data['content'];
             $data = $record->toArray();
-            $data['content'] = static::toApiResponse($content);
+            $data['content'] = static::mutateData($content);
 
             unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
             ksort($data);
@@ -130,11 +132,6 @@ abstract class PageTemplate
     public function toSearchableArray(FilamentPage $record): array
     {
         return $this->apiTransform($record);
-    }
-
-    public static function toApiResponse(array $data): array
-    {
-        return $data;
     }
 
     protected static function loadRelatedData($id): array

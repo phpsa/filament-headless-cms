@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Phpsa\FilamentHeadlessCms\Contracts\FilamentPage;
 
 if (trait_exists(\Laravel\Scout\Searchable::class)) {
@@ -45,6 +47,7 @@ class FhcmsContent extends BasePageModel implements FilamentPage
         'data',
         'published_at',
         'published_until',
+        'parent_id',
     ];
 
     public function getRouteKeyName(): string
@@ -56,6 +59,7 @@ class FhcmsContent extends BasePageModel implements FilamentPage
         'data'            => 'json',
         'published_at'    => 'immutable_datetime',
         'published_until' => 'immutable_datetime',
+        'parent_id'       => 'integer'
     ];
 
     public function getUrlAttribute(): string
@@ -87,5 +91,22 @@ class FhcmsContent extends BasePageModel implements FilamentPage
         ->when($filters['tags'] ?? null, function ($query, $tags) {
                 $query->withAnyTags($tags);
         });
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(static::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(static::class, 'parent_id');
+    }
+
+    public function allChildren(): HasMany
+    {
+        return $this->hasMany(static::class, 'parent_id')
+            ->select(['id', ...$this->fillable])
+            ->with('allChildren:id,' . implode(',', $this->fillable));
     }
 }

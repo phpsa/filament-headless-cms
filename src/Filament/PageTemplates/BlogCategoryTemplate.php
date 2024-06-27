@@ -29,7 +29,7 @@ class BlogCategoryTemplate extends PageTemplate
         ];
     }
 
-    public static function toApiResponse(array $data): array
+    public static function mutateData(array $data): array
     {
 
         if (filled($data['featured_image'])) {

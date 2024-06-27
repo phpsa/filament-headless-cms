@@ -86,9 +86,8 @@ class BlogTemplate extends PageTemplate
         ];
     }
 
-    public static function toApiResponse(array $data): array
+    public static function mutateData(array $data): array
     {
-
         $data['category'] = null;
         if (filled($data['category_id'] ?? null)) {
             $data['category'] = self::loadRelatedData($data['category_id']);
