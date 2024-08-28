@@ -58,6 +58,15 @@ class InstallCommand extends Command
             $this->components->info('Thank you!');
         }
 
+        if ($this->confirm("Would you like to install the recommended TipTap Editor?", true)) {
+            exec('composer require awcodes/filament-tiptap-editor:"^3.0"');
+            $this->components->info('Please follow https://filamentphp.com/plugins/awcodes-tiptap-editor#installation in order to configure the tip tap editor');
+        }
+        if ($this->confirm("Would you like to install the recommended Curator for media managment?", true)) {
+            exec('composer require awcodes/filament-curator');
+            $this->components->info('Please follow https://filamentphp.com/plugins/awcodes-curator#installation in order to configure the tip tap editor');
+        }
+
         return static::SUCCESS;
     }
 }

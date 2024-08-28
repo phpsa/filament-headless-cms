@@ -24,9 +24,14 @@ abstract class PageTemplate
 
     protected static bool $publishDates = true;
 
+    protected static ?string $publicPath = null;
+
     abstract public static function title(): string;
 
-    abstract public static function mutateData(array $data): array;
+    public static function mutateData(array $data): array
+    {
+        return $data;
+    }
 
     /**
      * @return array<int|string, Component>
@@ -36,6 +41,14 @@ abstract class PageTemplate
     public static function getTemplateSlug(): string
     {
         return Str::slug(static::title());
+    }
+
+    public static function getPublicPath(): string
+    {
+        return str(static::$publicPath ?? Str::slug(static::title()))
+            ->whenStartsWith('/', fn ($st) => $st, fn($st) => $st->prepend('/'))
+            ->whenEndsWith('/', fn ($st) => $st, fn($st) => $st->append('/'))
+            ->__toString();
     }
 
     public static function getNavigationIcon(): string

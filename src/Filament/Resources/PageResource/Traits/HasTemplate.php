@@ -22,15 +22,16 @@ trait HasTemplate
      * @return array{class:class-string<PageTemplate>, label:string}
      * @throws BindingResolutionException
      */
-    public static function getCurrentTemplate(?string $key = null): mixed
+    public static function getCurrentTemplate(?string $key = null, ?string $slug = null): mixed
     {
-        $slug = self::getCurrentTemplateSlug();
+        $slug ??= self::getCurrentTemplateSlug();
 
         $templates = static::getTemplates()
             ->flip()
             ->mapWithKeys(
                 fn($class, $label) => [
                     $class::getTemplateSlug() => [
+                        'path'          => $class::getPublicPath(),
                         'class'         => $class,
                         'label'         => $label,
                         'slug'          => $class::getTemplateSlug(),

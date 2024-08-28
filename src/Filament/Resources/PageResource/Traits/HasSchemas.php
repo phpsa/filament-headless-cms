@@ -13,7 +13,7 @@ trait HasSchemas
 
     public static function getPrimaryColumnSchema(): array
     {
-        $slug = static::getCurrentTemplateSlug();
+        $slug = self::getCurrentTemplate('path');
 
         return [
             Section::make([
@@ -21,7 +21,8 @@ trait HasSchemas
                 TitleWithSlugInput::make(
                     fieldTitle: 'title', // The name of the field in your model that stores the title.
                     fieldSlug: 'slug', // The name of the field in your model that will store the slug.
-                    urlHost: FilamentHeadlessCms::getPlugin()->getSiteUrl() . '/' . $slug,
+                    urlHost: FilamentHeadlessCms::getPlugin()->getSiteUrl(),
+                    urlPath:  $slug,
                 )->columnSpanFull(),
                 ...static::insertAfterPrimaryColumnSchema(),
             ])->columnSpanFull()

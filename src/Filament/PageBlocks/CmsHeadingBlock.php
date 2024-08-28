@@ -36,6 +36,7 @@ class CmsHeadingBlock extends PageBlock
                         ->columnSpan(['md' => 2, 'lg' => 3, 'xl' => 4]),
 
             ])
+            ->preview('filament-headless-cms::components.page-builder.preview.heading')
             ->columns(['sm' => 1, 'md' => 3, 'lg' => 4, 'xl' => 5])
             ->label(function (?array $state): string {
                 if (blank($state) || blank($state['content'])) {

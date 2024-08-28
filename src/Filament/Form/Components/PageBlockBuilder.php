@@ -18,8 +18,10 @@ class PageBlockBuilder extends Builder
         $this->blocks(FilamentCmsPageBlocks::getPageBlocks());
 
         $this->label(fn () => new HtmlString('<h1 class="fi-header-heading text-xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-2xl">Page Blocks</h1>'));
+      //  $this->label('Page Blocks');
 
         $this->addActionLabel('Add Block');
+        $this->cloneable();
 
         $this->blockPickerColumns(['md' => 1, 'lg' => 2, 'xl' => 3]);
 

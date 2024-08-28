@@ -32,96 +32,96 @@ class SimplePageTemplate extends PageTemplate
     public static function schema(): array
     {
         return [
-            PageBlockBuilder::make('contentblock')->except(HelloBlock::getName()),
-            Builder::make('content')
-            ->blocks([
+            PageBlockBuilder::make('contentblock'),
+            // Builder::make('content')
+            // ->blocks([
 
-                Builder\Block::make('grid')
-                ->schema([
-                    Select::make('column_set')->options([
-                        '7-1' => '7-1',
-                        '6-2' => '6-2',
-                        '5-3' => '5-3',
-                        '4-4' => '4-4',
-                        '3-5' => '3-5',
-                        '2-6' => '2-6',
-                        '1-7' => '1-7',
-                    ])->live(),
-                    Grid::make('grid')->columns(8)
-                    ->schema([
-                        Builder::make('content-left')->blocks([
-                            Builder\Block::make('paragraph')
-                    ->schema([
-                        Textarea::make('content')
-                            ->label('Paragraph')
-                            ->required(),
-                            ]),
-                        ])->columnSpan(fn(Get $get) => match ($get('column_set')) {
-                            '7-1' => 7,
-                            '6-2' => 6,
-                            '5-3' => 5,
-                            '4-4' => 4,
-                            '3-5' => 3,
-                            '2-6' => 2,
-                            '1-7' => 1,
-                            default => 4
-                        }),
-                        Builder::make('content-right')->blocks([
-                            Builder\Block::make('paragraph')
-                    ->schema([
-                        Textarea::make('content')
-                            ->label('Paragraph')
-                            ->required(),
-                            ]),
-                        ])->columnSpan(fn(Get $get) => match ($get('column_set')) {
-                            '7-1' => 1,
-                            '6-2' => 2,
-                            '5-3' => 3,
-                            '4-4' => 4,
-                            '3-5' => 5,
-                            '2-6' => 6,
-                            '1-7' => 7,
-                            default => 4
-                        }),
-                    ])
+            //     Builder\Block::make('grid')
+            //     ->schema([
+            //         Select::make('column_set')->options([
+            //             '7-1' => '7-1',
+            //             '6-2' => '6-2',
+            //             '5-3' => '5-3',
+            //             '4-4' => '4-4',
+            //             '3-5' => '3-5',
+            //             '2-6' => '2-6',
+            //             '1-7' => '1-7',
+            //         ])->live(),
+            //         Grid::make('grid')->columns(8)
+            //         ->schema([
+            //             Builder::make('content-left')->blocks([
+            //                 Builder\Block::make('paragraph')
+            //         ->schema([
+            //             Textarea::make('content')
+            //                 ->label('Paragraph')
+            //                 ->required(),
+            //         ]),
+            //             ])->columnSpan(fn(Get $get) => match ($get('column_set')) {
+            //                 '7-1' => 7,
+            //                 '6-2' => 6,
+            //                 '5-3' => 5,
+            //                 '4-4' => 4,
+            //                 '3-5' => 3,
+            //                 '2-6' => 2,
+            //                 '1-7' => 1,
+            //                 default => 4
+            //             }),
+            //             Builder::make('content-right')->blocks([
+            //                 Builder\Block::make('paragraph')
+            //         ->schema([
+            //             Textarea::make('content')
+            //                 ->label('Paragraph')
+            //                 ->required(),
+            //         ]),
+            //             ])->columnSpan(fn(Get $get) => match ($get('column_set')) {
+            //                 '7-1' => 1,
+            //                 '6-2' => 2,
+            //                 '5-3' => 3,
+            //                 '4-4' => 4,
+            //                 '3-5' => 5,
+            //                 '2-6' => 6,
+            //                 '1-7' => 7,
+            //                 default => 4
+            //             }),
+            //         ])
 
-                ])
-                ->columnSpanFull(),
+            //     ])
+            //     ->columnSpanFull(),
 
-                Builder\Block::make('heading')
-                    ->schema([
-                        TextInput::make('content')
-                            ->label('Heading')
-                            ->required(),
-                        Select::make('level')
-                            ->options([
-                                'h1' => 'Heading 1',
-                                'h2' => 'Heading 2',
-                                'h3' => 'Heading 3',
-                                'h4' => 'Heading 4',
-                                'h5' => 'Heading 5',
-                                'h6' => 'Heading 6',
-                            ])
-                            ->required(),
-                    ])
-                    ->columns(2),
-                Builder\Block::make('paragraph')
-                    ->schema([
-                        Textarea::make('content')
-                            ->label('Paragraph')
-                            ->required(),
-                    ]),
-                Builder\Block::make('image')
-                    ->schema([
-                        FileUpload::make('url')
-                            ->label('Image')
-                            ->image()
-                            ->required(),
-                        TextInput::make('alt')
-                            ->label('Alt text')
-                            ->required(),
-                    ]),
-            ])
+            //     Builder\Block::make('heading')
+            //         ->schema([
+            //             TextInput::make('content')
+            //                 ->label('Heading')
+            //                 ->required(),
+            //             Select::make('level')
+            //                 ->options([
+            //                     'h1' => 'Heading 1',
+            //                     'h2' => 'Heading 2',
+            //                     'h3' => 'Heading 3',
+            //                     'h4' => 'Heading 4',
+            //                     'h5' => 'Heading 5',
+            //                     'h6' => 'Heading 6',
+            //                 ])
+            //                 ->required(),
+            //         ])
+            //         ->columns(2),
+            //     Builder\Block::make('paragraph')
+            //         ->schema([
+            //             Textarea::make('content')
+            //                 ->label('Paragraph')
+            //                 ->required(),
+            //         ]),
+            //     Builder\Block::make('image')
+            //         ->schema([
+            //             FileUpload::make('url')
+            //                 ->label('Image')
+            //                 ->image()
+            //                 ->required(),
+            //             TextInput::make('alt')
+            //                 ->label('Alt text')
+            //                 ->required(),
+            //         ]),
+            // ])
 
         ];
     }
