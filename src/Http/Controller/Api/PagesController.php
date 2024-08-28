@@ -9,37 +9,49 @@ use Phpsa\FilamentHeadlessCms\Filament\Resources\PageResource;
 
 class PagesController
 {
+
+    protected FilamentHeadlessCms $cms;
+
+
+    public function __construct()
+    {
+        $this->cms = FilamentHeadlessCms::getPlugin();
+    }
+
+
     public function index(Request $request, string $type)
     {
 
-        $limit = min($request->integer('limit', 10), 100);
+        $template = $this->cms->getTemplates()
+        ->mapWithKeys(fn($class) => [$class::getTemplateSlug() => $class])
+        ->get($type);
 
-        $records = FilamentHeadlessCms::getPlugin()->getModel()::query()
-            ->select(['title',
-                'slug',
-                'published_at',
-                'published_until',
-            ])
-            ->wherePublished()
-            ->whereTemplateSlug($type)
-            // ->when(
-            //     $request->has('filter'),
-            //     fn ($query) =>$query->withFilter($request->get('filter'))
-            // )
-            ->paginate($limit);
+        $query = $template::getQueryBuilder()->select($template::indexFields());
+        if ($template::$paginate) {
+            $limit = min($request->integer('limit', 10), 100);
+            /** @var \Illuminate\Pagination\LengthAwarePaginator $results */
+            $results = $query->paginate($limit)->appends($request->query())->toArray();
 
-        return response()->json([
-            'data' => $records,
-        ]);
+            return response()->json([ ...$results,
+                'path' => $template::getPublicPath(),
+            ]);
+        } else {
+            $results = $query->get();
+            return response()->json([
+                'data' => $results,
+                'path' => $template::getPublicPath(),
+            ]);
+        }
     }
 
     public function show(string $type, string $slug)
     {
 
-        $record = FilamentHeadlessCms::getPlugin()->getModel()::query()
-            ->with('seo:fhcms_contents_id,title,robots,keywords,description')
-            ->wherePublished()
-            ->whereTemplateSlug($type)
+        $template = $this->cms->getTemplates()
+        ->mapWithKeys(fn($class) => [$class::getTemplateSlug() => $class])
+        ->get($type);
+
+        $record = $template::getQueryBuilder()
             ->whereSlug($slug)
             ->firstOrFail();
 

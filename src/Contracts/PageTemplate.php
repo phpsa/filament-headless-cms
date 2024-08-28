@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Phpsa\FilamentHeadlessCms\FilamentHeadlessCms;
 
@@ -127,19 +128,19 @@ abstract class PageTemplate
     {
 
         /** @var array */
-        $page = Cache::remember('phpsa-filament-headless-cms-page-' . $record->id, now()->addDay(), function () use ($record): array {
-            $content = $record->data['content'];
-            $data = $record->toArray();
-            $data['content'] = static::mutateData($content);
+      //  $page = Cache::remember('phpsa-filament-headless-cms-page-' . $record->id, now()->addDay(), function () use ($record): array {
+        $content = $record->data['content'];
+        $data = $record->toArray();
+        $data['content'] = static::mutateData($content);
 
-            unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
-            ksort($data);
-            return $data;
-        });
+        unset($data['seo']['fhcms_contents_id'], $data['data'], $data['template'], $data['template_slug'], $data['id'], $data['deleted_at']);
+        ksort($data);
+        return $data;
+        // });
 
-        throw_unless(is_array($page) && filled($page));
+        // throw_unless(is_array($page) && filled($page));
 
-        return $page;
+        // return $page;
     }
 
     public function toSearchableArray(FilamentPage $record): array
@@ -159,5 +160,40 @@ abstract class PageTemplate
 
         $template = $record->template;
         return $template::apiTransform($record);
+    }
+
+    public static function getQueryBuilder(): Builder
+    {
+        $builder = FilamentHeadlessCms::getPlugin()->getModel()::query()
+        ->where('template_slug', static::getTemplateSlug());
+
+        if (static::$sortable) {
+            $builder->orderBy('sort_order');
+        }
+
+        if (static::hasPublishDates()) {
+            $builder->wherePublished();
+        }
+
+        return $builder;
+    }
+
+    public static function indexFields(): array
+    {
+        $fields = [
+            'title',
+            'slug',
+
+        ];
+        if (static::$sortable) {
+            $fields[] = 'sort_order';
+        }
+
+        if (static::hasPublishDates()) {
+            $fields[] = 'published_at';
+            $fields[] = 'published_until';
+        }
+
+        return $fields;
     }
 }
